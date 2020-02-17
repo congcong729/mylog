@@ -22,13 +22,15 @@
       <span :class="{isError:filterLevel ==='ERROR'}" @click="logFilter('ERROR')">Error</span>
     </div>
     <ul class="footer" v-infinite-scroll="load">
-      <li class="title">
+      <div>
+        <li class="title">
         <span>TAG</span>
         <span>日志级别</span>
         <span>线程</span>
         <span>文件名称</span>
         <span>日志内容</span>
       </li>
+      </div>
       <li v-for="(log,index) in (filterLogs.length>0 && filterLogs)||logs" :key="index"
          :class="{isVerbose:log.level.toUpperCase() ==='VERBOSE',isDebug:log.level.toUpperCase() ==='DEBUG',
          isInfo:log.level.toUpperCase() ==='INFO',isWarn:log.level.toUpperCase() ==='WARN',isError:log.level.toUpperCase() ==='ERROR'}">
@@ -43,11 +45,12 @@
 </template>
 
 <script>
-import { Message } from 'element-ui';
+import { Message,InfiniteScroll } from 'element-ui';
 import {req_Log} from './api/index.js'
 
 
 export default {
+  directives: { InfiniteScroll },
   data() {
     return {
       pickerOptions: {
@@ -176,8 +179,18 @@ export default {
 }
 #app .footer{
   width: 1000px;
+  height: 500px;
+  overflow-y: auto;
   margin: 0 auto;
   padding: 0;
+}
+#app .footer>div{
+  height: 31px;
+}
+#app .footer li.title{
+  position: fixed;
+  width: 981px;
+  background-color: #fff;
 }
 #app .footer li{
   display: flex;
@@ -205,9 +218,6 @@ export default {
 #app .footer li:last-child{
   border-bottom:1px solid #aaa;
 }
-/* #app .footer li.title{
-  position: fixed
-} */
 #app .footer li span{
   padding: 1px 5px;
   font-size: 14px;
