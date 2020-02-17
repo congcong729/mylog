@@ -1,2 +1,2 @@
-const axios = require('axios')
-export const req_Log = date=>axios.post('路径',{date})
+import ajax from './myaxios'
+export const req_Log = date =>ajax.post('/log',{date})
