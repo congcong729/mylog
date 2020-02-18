@@ -24,28 +24,30 @@
       <span :class="{isError:filterLevel ==='ERROR'}" @click="logFilter('ERROR')">Error</span>
     </div>
     <div  class="footer" v-infinite-scroll="()=>{}">
-      <ul>
-        <div>
-          <li class="title" :class="{bigWidth:filterLogs.length<14&&filterLogs.length>=0}">
-            <span>时间</span> 
-            <span>TAG</span>
-            <span>日志级别</span>
-            <span>线程</span>
-            <span>文件名称</span>
-            <span>日志内容</span>
-          </li>
-        </div>
-        <li v-for="(log,index) in filterLogs" :key="index"
-          :class="{isVerbose:log.level.toUpperCase() ==='VERBOSE',isDebug:log.level.toUpperCase() ==='DEBUG',
-          isInfo:log.level.toUpperCase() ==='INFO',isWarn:log.level.toUpperCase() ==='WARN',isError:log.level.toUpperCase() ==='ERROR'}">
-          <span>{{log.time}}</span>
-          <span>{{log.tag}}</span>
-          <span>{{log.level}}</span>
-          <span>{{log.thread}}</span>
-          <span>{{log.fileName}}</span>
-          <span>{{log.content}}</span>
-        </li>
-      </ul>
+      <table border="1" cellspacing="0">
+        <thead>
+          <tr>
+            <th>时间</th> 
+            <th>TAG</th>
+            <th>日志级别</th>
+            <th>线程</th>
+            <th>文件名称</th>
+            <th>日志内容</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(log,index) in filterLogs" :key="index"
+          :class="{isVerbose:log.level_string.toUpperCase() ==='VERBOSE',isDebug:log.level_string.toUpperCase() ==='DEBUG',
+          isInfo:log.level_string.toUpperCase() ==='INFO',isWarn:log.level_string.toUpperCase() ==='WARN',isError:log.level_string.toUpperCase() ==='ERROR'}">
+          <td>{{log.timestmp}}</td>
+          <td>{{log.logger_name}}</td>
+          <td>{{log.level_string}}</td>
+          <td>{{log.thread_name}}</td>
+          <td>{{log.caller_filename}}</td>
+          <td>{{log.formatted_message}}</td>
+        </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
@@ -136,15 +138,15 @@ export default {
       const filtertype = this.filterLevel
       if(this.filterLevel === 'ALL'){
         this.filterLogs = this.logs.filter((log)=>{
-          return log.time.indexOf(filterKey)!==-1 || log.tag.indexOf(filterKey)!==-1 || log.level.indexOf(filterKey)!==-1 || log.thread.indexOf(filterKey)!==-1 ||
-          log.fileName.indexOf(filterKey)!==-1 || log.content.indexOf(filterKey)!==-1
+          return log.timestmp.indexOf(filterKey)!==-1 || log.logger_name.indexOf(filterKey)!==-1 || log.level_string.indexOf(filterKey)!==-1 || log.thread_name.indexOf(filterKey)!==-1 ||
+          log.caller_filename.indexOf(filterKey)!==-1 || log.formatted_message.indexOf(filterKey)!==-1
         })
       }else{
         this.filterLogs = this.logs.filter((log)=>{
-          return log.level.toUpperCase() === filtertype
+          return log.level_string.toUpperCase() === filtertype
         }).filter((item)=>{
-           return item.time.indexOf(filterKey)!==-1 || item.tag.indexOf(filterKey)!==-1 || item.level.indexOf(filterKey)!==-1 || item.thread.indexOf(filterKey)!==-1 ||
-          item.fileName.indexOf(filterKey)!==-1 || item.content.indexOf(filterKey)!==-1
+           return item.timestmp.indexOf(filterKey)!==-1 || item.logger_name.indexOf(filterKey)!==-1 || item.level_string.indexOf(filterKey)!==-1 || item.thread_name.indexOf(filterKey)!==-1 ||
+          item.caller_filename.indexOf(filterKey)!==-1 || item.formatted_message.indexOf(filterKey)!==-1
         })
       }
     }
@@ -153,6 +155,11 @@ export default {
 </script>
 
 <style>
+/* html,body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+} */
 #app{
   width: 1150px;
   margin: 0 auto;
@@ -224,54 +231,74 @@ export default {
   margin: 0 auto;
   padding: 0;
 }
-#app .footer ul{
-  width: 983px;
+#app .footer table{
+  border:1px solid #eee;
+  table-layout:fixed;
+  width: 1200px;
   padding: 0;
   margin: 0;
+  font-size: 13px;
+  text-align: center;
 }
-#app .footer ul div{
+#app .footer table tr{
   height: 31px;
 }
-#app .footer li.title{
-  position: fixed;
-  width: 981px;
-  background-color: #fff;
+#app .footer table tr th,#app .footer table tr td{
+  overflow: hidden;
+  word-break:keep-all;
+  white-space:nowrap;
+  text-overflow:ellipsis;
 }
-#app .footer li.bigWidth{
-  width: 981px;
-  position: fixed;
-  background-color: #fff;
+#app .footer table tr th:first-child,#app .footer table tr td:first-child{
+  width: 110px;
 }
-#app .footer li{
-  display: flex;
-  align-items:none;
-  height: 31px;
-  line-height: 31px;
-  border:1px solid #aaa;
-  border-bottom: none;
+#app .footer table tr th:nth-child(2),#app .footer table tr td:nth-child(2){
+  width: 130px;
+  padding: 0 5px;
 }
-#app .footer li.isVerbose{
+#app .footer table tr th:nth-child(3),#app .footer table tr td:nth-child(3){
+  width: 60px;
+  padding: 0 5px;
+}
+#app .footer table tr th:nth-child(4),#app .footer table tr td:nth-child(4){
+  width: 60px;
+  padding: 0 5px;
+}
+#app .footer table tr th:nth-child(5),#app .footer table tr td:nth-child(5){
+  width: 130px;
+  padding: 0 5px;
+}
+#app .footer table tr td:nth-child(5){
+  text-align: left;
+}
+#app .footer table tr th:nth-child(6){
+  text-align: center;
+}
+#app .footer table tr td:nth-child(6){
+  text-align: left;
+}
+#app .footer tr.isVerbose{
   color: #000
 }
-#app .footer li.isDebug{
+#app .footer tr.isDebug{
   color: rgb(26, 189, 20);
 }
-#app .footer li.isInfo{
+#app .footer tr.isInfo{
   color: #aaa
 }
-#app .footer li.isWarn{
+#app .footer tr.isWarn{
   color: yellowgreen
 }
-#app .footer li.isError{
+#app .footer tr.isError{
   color: red
 }
-#app .footer li:last-child{
+#app .footer tr:last-child{
   border-bottom:1px solid #aaa;
 }
-#app .footer li span:first-child{
+#app .footer tr span:first-child{
   width: 13%;
 }
-#app .footer li span{
+#app .footer tr span{
   padding: 1px 5px;
   font-size: 14px;
   border-right:1px solid #aaa;
@@ -279,7 +306,7 @@ export default {
   align-items: center;
   text-align: center;
 }
-#app .footer li span:last-child{
+#app .footer tr span:last-child{
   border-right: none;
   text-align: left;
   width: 60%;

@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import { DatePicker } from 'element-ui';
-import './mock/mock-server.js'
+// import './mock/mock-server.js'
 
 
 Vue.config.productionTip = false
