@@ -13,7 +13,6 @@
         value-format="yyyyMMdd"
         :picker-options="pickerOptions">
       </el-date-picker>
-      
     </div>
     <div class="filter">
       <span :class="{isAll:filterLevel ==='ALL'}" @click="logFilter('ALL')">All</span>
@@ -23,42 +22,55 @@
       <span :class="{isWarn:filterLevel ==='WARN'}" @click="logFilter('WARN')">Warn</span>
       <span :class="{isError:filterLevel ==='ERROR'}" @click="logFilter('ERROR')">Error</span>
     </div>
-    <div  class="footer" v-infinite-scroll="()=>{}">
-      <table border="1" cellspacing="0">
-        <thead>
-          <tr>
-            <th>时间</th> 
-            <th>TAG</th>
-            <th>日志级别</th>
-            <th>线程</th>
-            <th>文件名称</th>
-            <th>日志内容</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(log,index) in filterLogs" :key="index"
-          :class="{isVerbose:log.level_string.toUpperCase() ==='VERBOSE',isDebug:log.level_string.toUpperCase() ==='DEBUG',
-          isInfo:log.level_string.toUpperCase() ==='INFO',isWarn:log.level_string.toUpperCase() ==='WARN',isError:log.level_string.toUpperCase() ==='ERROR'}">
-          <td>{{log.timestmp}}</td>
-          <td>{{log.logger_name}}</td>
-          <td>{{log.level_string}}</td>
-          <td>{{log.thread_name}}</td>
-          <td>{{log.caller_filename}}</td>
-          <td>{{log.formatted_message}}</td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
+    <el-table
+      :row-class-name="tableRowClassName"
+      :data="filterLogs"
+      height=700
+      border
+      style="width: 1200">
+      <el-table-column
+        prop="timestmp"
+        label="时间"
+        width="110">
+      </el-table-column>
+      <el-table-column
+        prop="logger_name"
+        label="TAG"
+        width="130">
+      </el-table-column>
+      <el-table-column
+        prop="level_string"
+        label="日志级别"
+        width="85">
+      </el-table-column>
+      <el-table-column
+        prop="thread_name"
+        label="线程"
+        width="60">
+      </el-table-column>
+      <el-table-column
+        prop="caller_filename"
+        label="文件名称"
+        width="130">
+      </el-table-column>
+      <el-table-column
+        prop="formatted_message"
+        label="日志内容">
+      </el-table-column>
+    </el-table>
   </div>
 </template>
 
 <script>
-import { Message,InfiniteScroll } from 'element-ui';
+import { Message,InfiniteScroll,Table,TableColumn } from 'element-ui';
 import {req_Log} from './api/index.js'
-
 
 export default {
   directives: { InfiniteScroll },
+  components:{
+    'el-table':Table,
+    'el-table-column':TableColumn
+  },
   data() {
     return {
       pickerOptions: {
@@ -110,18 +122,39 @@ export default {
     getdatatime(){//默认显示今天
       this.value1= new Date();
     },
+    getDate(time){
+      let date = new Date(time)
+      return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + "-" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+    },
+    tableRowClassName({row}) {
+      if (row.level_string.toUpperCase() ==='VERBOSE') {
+        return 'verbose-row';
+      } else if (row.level_string.toUpperCase() ==='DEBUG') {
+        return 'debug-row';
+      }else if (row.level_string.toUpperCase() ==='INFO') {
+        return 'info-row';
+      }else if (row.level_string.toUpperCase() ==='WARN') {
+        return 'warn-row';
+      }else if (row.level_string.toUpperCase() ==='ERROR') {
+        return 'error-row';
+      }
+    },
     //选定日期后发请求
     dateFilter(date){
+        console.log(date)
       req_Log(date||this.value1).then(
       (value)=>{
         this.logs = value.data
+        this.logs.map((log)=>{
+          return log.timestmp=this.getDate(log.timestmp)
+        })
         this.filterLogs = this.logs
         },
       (error)=>{Message({
-          showClose: true,
-          message: error.message
-        })}
-    )
+        showClose: true,
+        message: error.message
+        })
+      })
     },
     //过滤数据
     logFilter(filtertype){
@@ -155,11 +188,6 @@ export default {
 </script>
 
 <style>
-/* html,body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-} */
 #app{
   width: 1150px;
   margin: 0 auto;
@@ -201,11 +229,11 @@ export default {
   color: #fff;
 }
 #app .filter span.isVerbose{
-  background: #000;
+  background: rgb(155, 180, 212);
   color: #fff;
 }
 #app .filter span.isDebug{
-  background: rgb(26, 189, 20);
+  background:  rgba(0, 255, 0,0.5);
   color: #fff;
 }
 #app .filter span.isInfo{
@@ -213,102 +241,37 @@ export default {
   color: #fff;
 }
 #app .filter span.isWarn{
-  background: yellowgreen;
+  background: rgba(230, 230, 5, 0.5);
   color: #fff;
 }
 #app .filter span.isError{
-  background: red;
+  background:rgba(255, 0, 0, 0.5);
   color: #fff;
 }
-
 #app .filter span:first-child{
   border-left: 1px solid #eee
 }
-#app .footer{
-  width: 1000px;
-  max-height: 704px;
-  overflow-y: auto;
-  margin: 0 auto;
-  padding: 0;
-}
-#app .footer table{
-  border:1px solid #eee;
-  table-layout:fixed;
-  width: 1200px;
-  padding: 0;
-  margin: 0;
-  font-size: 13px;
-  text-align: center;
-}
-#app .footer table tr{
-  height: 31px;
-}
-#app .footer table tr th,#app .footer table tr td{
-  overflow: hidden;
-  word-break:keep-all;
-  white-space:nowrap;
+#app .el-table tr,#app .el-table td,#app .el-table td div{
+  height: 30px ;
+  line-height: 30px;
+  overflow:hidden;
   text-overflow:ellipsis;
+  white-space:nowrap;
+  padding: 0 ;
 }
-#app .footer table tr th:first-child,#app .footer table tr td:first-child{
-  width: 110px;
+#app .el-table .verbose-row {
+  background: rgb(155, 180, 212);
 }
-#app .footer table tr th:nth-child(2),#app .footer table tr td:nth-child(2){
-  width: 130px;
-  padding: 0 5px;
+#app .el-table .debug-row {
+  background: rgba(0, 255, 0,0.5);
 }
-#app .footer table tr th:nth-child(3),#app .footer table tr td:nth-child(3){
-  width: 60px;
-  padding: 0 5px;
+#app .el-table .info-row {
+  background: #fff;
 }
-#app .footer table tr th:nth-child(4),#app .footer table tr td:nth-child(4){
-  width: 60px;
-  padding: 0 5px;
+#app .el-table .warn-row {
+  background: rgba(255, 255, 0, 0.5);
 }
-#app .footer table tr th:nth-child(5),#app .footer table tr td:nth-child(5){
-  width: 130px;
-  padding: 0 5px;
-}
-#app .footer table tr td:nth-child(5){
-  text-align: left;
-}
-#app .footer table tr th:nth-child(6){
-  text-align: center;
-}
-#app .footer table tr td:nth-child(6){
-  text-align: left;
-}
-#app .footer tr.isVerbose{
-  color: #000
-}
-#app .footer tr.isDebug{
-  color: rgb(26, 189, 20);
-}
-#app .footer tr.isInfo{
-  color: #aaa
-}
-#app .footer tr.isWarn{
-  color: yellowgreen
-}
-#app .footer tr.isError{
-  color: red
-}
-#app .footer tr:last-child{
-  border-bottom:1px solid #aaa;
-}
-#app .footer tr span:first-child{
-  width: 13%;
-}
-#app .footer tr span{
-  padding: 1px 5px;
-  font-size: 14px;
-  border-right:1px solid #aaa;
-  width: 7%;
-  align-items: center;
-  text-align: center;
-}
-#app .footer tr span:last-child{
-  border-right: none;
-  text-align: left;
-  width: 60%;
+#app .el-table .error-row {
+  background: rgba(255, 0, 0, 0.5);
 }
 </style>
